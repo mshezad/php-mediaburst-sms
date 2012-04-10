@@ -4,12 +4,12 @@
  * 
  * Contact hello@mediaburst.co.uk if you have any questions
  *
- * @package     mediaburstSMS
- * @author      mediaburst <hello@mediaburst.co.uk>
- * @copyright   2011 Mediaburst Ltd
- * @license     ISC
- * @version		1.4
- * @since       1.0
+ * @package	mediaburstSMS
+ * @author	mediaburst <hello@mediaburst.co.uk>
+ * @copyright	2011 Mediaburst Ltd
+ * @license	ISC
+ * @version	1.4.2
+ * @since	1.0
  * @link	http://www.mediaburst.co.uk/api/	Mediaburst API Documentation
  * @link	https://github.com/mediaburst/		Latest version of this class
  */
@@ -119,23 +119,33 @@ class mediaburstSMS {
 		if (!is_array($to)) 
 			$to = array($to);
     
-    // Escape dodgy characters as DOMDocument throws a paddy
-    $message = htmlentities( $message, ENT_QUOTES | ENT_XML1, 'UTF-8' );
-		
 		$req_doc = new DOMDocument('1.0', 'UTF-8');
 		$root = $req_doc->createElement('Message');
 		$req_doc->appendChild($root);
-		$root->appendChild($req_doc->createElement('Username', $this->username));
-		$root->appendChild($req_doc->createElement('Password', $this->password));
+
+		$user_node = $req_doc->createElement('Username');
+		$user_node->appendChild($req_doc->createTextNode($this->username));
+		$root->appendChild($user_node);
+
+		$pass_node = $req_doc->createElement('Password');
+		$pass_node->appendChild($req_doc->createTextNode($this->password));
+		$root->appendChild($pass_node);
 
 		foreach($to as $number) {
 			$sms_node = $req_doc->createElement('SMS');
 			$sms_node->appendChild($req_doc->createElement('To', $number)); 
-			$sms_node->appendChild($req_doc->createElement('Content', $message));
+
+			$content_node = $req_doc->createElement('Content');
+			$content_node->appendChild($req_doc->createTextNode($message));
+			$sms_node->appendChild($content_node);
+
 			if($this->long)
 				$sms_node->appendChild($req_doc->createElement('Concat', 3));
-			if($this->from)
-				$sms_node->appendChild($req_doc->createElement('From', $this->from));
+			if($this->from) {
+				$from_node = $req_doc->createElement('From');
+				$from_node->appendChild($req_doc->createTextNode($this->from));
+				$sms_node->appendChild($from_node);
+			}
 			if($this->truncate)
 				$sms_node->appendChild($req_doc->createElement('Truncate', 1));
 
@@ -145,6 +155,7 @@ class mediaburstSMS {
 		$req_xml = $req_doc->saveXML();
 		if ( $this->log )
 			$this->LogXML( 'Send SMS XML', $req_xml );
+
 		$resp_xml = $this->PostToAPI($this->url_send, $req_xml);
 		$resp_doc = new DOMDocument();
 		$resp_doc->loadXML($resp_xml);

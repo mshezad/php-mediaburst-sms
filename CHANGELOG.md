@@ -1,5 +1,9 @@
 # php-mediaburst-sms Changelog
 
+## 1.4.2 (10th April 2012)
+*	Second fix for character encoding as htmlentities didn't work correctly older PHP installs.
+	The new fix should be backwards compatible with all 5.x releases.
+
 ## 1.4.1 (20th March 2012)
 *	Escaping bad characters in the message to stop a DOMDocument error being thrown when sending an &, <, >, " or '.
 
